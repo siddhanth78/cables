@@ -29,10 +29,10 @@ class Ring():
     def __init__(self, ring):
         self.ring = ring
         self.cost = self.get_cost()
+        self.nodes = self.get_nodes()
 
     def get_cost(self):
         c = 0
-        global block_dist
         for r in range(len(self.ring)):
             c += self.ring[r][1]
         c += block_dist[self.ring[0][0]][1]
@@ -40,6 +40,12 @@ class Ring():
         if len(self.ring) != len(set(self.ring)):
             c += 1000
         return c
+
+    def get_nodes(self):
+        nodes = []
+        for r in self.ring:
+            nodes.append(r[0])
+        return nodes
 
 '''Group of rings'''
 class Ring_Group():
@@ -53,9 +59,9 @@ class Ring_Group():
         all = []
         for r in self.rings:
             c += r.cost
-            all.extend(r.ring)
-        if len(all) != 44:
-            c += 5000
+            all.extend(r.nodes)
+        if len(set(all)) != 44:
+            c += 1000 * (44 - len(set(all)))
         return c
 
 '''Populate pool'''
@@ -80,15 +86,35 @@ def populate(total, pop_size, gps_dist, block_dist):
 gps_dist, block_dist, code_map = get_data()
 
 '''Plot data points'''
-def plot():
+def plot_rings(rings):
+    print(rings.cost)
     plt.scatter(df["LONG"][0], df["LAT"][0])
     plt.scatter(df["LONG"][1:], df["LAT"][1:])
+    for ring in rings.rings:
+        lat = [df["LAT"][0]]
+        long = [df["LONG"][0]]
+        for r in ring.ring:
+            lat.append(code_map[r[0]][1])
+            long.append(code_map[r[0]][2])
+        lat.append(df["LAT"][0])
+        long.append(df["LONG"][0])
+        plt.plot(long, lat)
     plt.show()
 
-#pool = populate(44, 200, gps_dist, block_dist)
-#epochs = 1000
+'''Mutation and crossing'''
+def mutate_group(rings):
+    prob = random.random()
+    pass
+
 '''
+pool = populate(44, 200, gps_dist, block_dist)
+plot_rings(sorted(pool, key=lambda x: x.cost)[0])
+
+epochs = 1000
+
 for gen in range(epochs):
     sorted_pool = sorted(pool, key=lambda x: x.cost)
-    pass
+    new_pool = sorted_pool[:20]
+    for _ in range(180):
+        parent1 = random.choice(sorted_pool[20:])
 '''
