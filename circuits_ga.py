@@ -2,8 +2,21 @@ import random
 import json
 import matplotlib.pyplot as plt
 import pandas as pd
+import math
 
 df = pd.read_csv("janikhurd.csv")
+
+def haversine(lat1, lon1, lat2, lon2):
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    r = 6371  # Radius of earth in kilometers
+  
+    return c * r
 
 '''Get JSON data'''
 def get_data():
@@ -103,18 +116,62 @@ def plot_rings(rings):
 
 '''Mutation and crossing'''
 def mutate_group(rings):
-    prob = random.random()
-    pass
+    cross_or_mut = random.random()
+    if cross_or_mut < 0.4:
+        all_rings = []
+        n = 44
+        while n != 0:
+            split = random.randint(1, 8)
+            n = n-split if n-split >= 0 else n
+            ring = []
+            init_gp = block_dist[random.choice(list(block_dist.keys()))][0]
+            for j in range(split):
+                sel_gp = random.choice(gps_dist[init_gp])
+                ring.append(sel_gp)
+                init_gp = sel_gp[0]
+            all_rings.append(Ring(ring))
+        return Ring_Group(all_rings, n)
+    else:
+        parents = random.sample(rings.rings, 2)
+        parent1, parent2 = sorted(parents, key=lambda x: len(x.nodes))
+        indices = (rings.rings.index(parent1), rings.rings.index(parent2))
+        split = random.randint(0, len(parent1.ring)-1)
 
-'''
-pool = populate(44, 200, gps_dist, block_dist)
-plot_rings(sorted(pool, key=lambda x: x.cost)[0])
+        if haversine(code_map[parent1.ring[split][0]][1], code_map[parent1.ring[split][0]][2], code_map[parent2.ring[split-1][0]][1], code_map[parent2.ring[split-1][0]][1]) <= 8.5:
+            child1 = parent1.ring[:split] + parent2.ring[split:]
+            child2 = parent2.ring[:split] + parent1.ring[split:]
+        else:
+            child1 = parent1.ring
+            child2 = parent2.ring
+        
+        new = []
+        c = 1
+        for r in range(len(rings.rings)):
+            if r in indices:
+                if c == 1:
+                    new.append(Ring(child1))
+                    c += 1
+                elif c == 2:
+                    new.append(Ring(child2))
+            new.append(rings.rings[r])
+        return Ring_Group(new, 44)
 
-epochs = 1000
+
+pool = populate(44, 400, gps_dist, block_dist)
+sorted_pool = []
+
+epochs = 5000
 
 for gen in range(epochs):
     sorted_pool = sorted(pool, key=lambda x: x.cost)
-    new_pool = sorted_pool[:20]
-    for _ in range(180):
-        parent1 = random.choice(sorted_pool[20:])
-'''
+    new_pool = sorted_pool[:40]
+    for _ in range(360):
+        selected = random.choice(sorted_pool)
+        child = mutate_group(selected)
+        new_pool.append(child)
+    pool = new_pool
+
+    if gen%100 == 0:
+        print(f"Gen {gen}: {sorted_pool[0].cost}")
+
+plot_rings(sorted_pool[0])
