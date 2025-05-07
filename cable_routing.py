@@ -12,7 +12,7 @@ def create_data_model():
     for d in df:
         dist_matrix.append(df[d])
     data["distance_matrix"] = dist_matrix
-    data["num_vehicles"] = 9
+    data["num_vehicles"] = 8
     data["depot"] = 0
     with open("code_map.json", "r") as filec:
         locations = json.loads(filec.read())
@@ -108,7 +108,6 @@ import matplotlib.pyplot as plt
 def plot_vrp_solution(data, manager, routing, solution):
     """Plots the VRP solution with coordinates scaled by 1/1000."""
     num_locations = len(data['locations'])
-    scale_factor = 1/1000  # Scale factor as requested
     
     # Create figure with appropriate size
     plt.figure(figsize=(12, 10))
@@ -119,8 +118,8 @@ def plot_vrp_solution(data, manager, routing, solution):
     # Plot locations
     for i in range(num_locations):
         # Scale the coordinates
-        x = data['locations'][i][1] * scale_factor
-        y = data['locations'][i][2] * scale_factor
+        x = data['locations'][i][1] 
+        y = data['locations'][i][2] 
         
         if i == data['depot']:
             # Plot depot as a red star with larger size
@@ -143,8 +142,8 @@ def plot_vrp_solution(data, manager, routing, solution):
         
         # Start at depot
         node = manager.IndexToNode(index)
-        points_x.append(data['locations'][node][1] * scale_factor)
-        points_y.append(data['locations'][node][2] * scale_factor)
+        points_x.append(data['locations'][node][1] )
+        points_y.append(data['locations'][node][2] )
         
         # Add all stops in the route
         while not routing.IsEnd(index):
@@ -152,8 +151,8 @@ def plot_vrp_solution(data, manager, routing, solution):
             index = solution.Value(routing.NextVar(index))
             
             node = manager.IndexToNode(index)
-            x = data['locations'][node][1] * scale_factor
-            y = data['locations'][node][2] * scale_factor
+            x = data['locations'][node][1] 
+            y = data['locations'][node][2] 
             
             points_x.append(x)
             points_y.append(y)
@@ -163,8 +162,8 @@ def plot_vrp_solution(data, manager, routing, solution):
                 label=f'Vehicle {vehicle_id+1}')
     
     # Set labels and title
-    plt.xlabel("X Coordinate (scaled by 1/1000)")
-    plt.ylabel("Y Coordinate (scaled by 1/1000)")
+    plt.xlabel("X Coordinate")
+    plt.ylabel("Y Coordinate")
     plt.title(f"Cable Routes - {data["num_vehicles"]} rings")
     
     # Add grid
