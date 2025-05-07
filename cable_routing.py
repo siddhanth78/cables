@@ -1,7 +1,7 @@
 from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import json
-
+import numpy as np
 
 def create_data_model():
     """Stores the data for the problem."""
@@ -14,6 +14,13 @@ def create_data_model():
     data["distance_matrix"] = dist_matrix
     data["num_vehicles"] = 9
     data["depot"] = 0
+    with open("code_map.json", "r") as filec:
+        locations = json.loads(filec.read())
+    coords = []
+    for l in locations:
+        coords.append(locations[l])
+    data["locations"] = coords
+    print(locations)
     return data
 
 
@@ -92,9 +99,85 @@ def main():
     # Print solution on console.
     if solution:
         print_solution(data, manager, routing, solution)
+        plot_vrp_solution(data, manager, routing, solution)
     else:
         print("No solution found !")
 
+import matplotlib.pyplot as plt
+
+def plot_vrp_solution(data, manager, routing, solution):
+    """Plots the VRP solution with coordinates scaled by 1/1000."""
+    num_locations = len(data['locations'])
+    scale_factor = 1/1000  # Scale factor as requested
+    
+    # Create figure with appropriate size
+    plt.figure(figsize=(12, 10))
+    
+    # Generate distinct colors for each vehicle route
+    colors = plt.cm.viridis(np.linspace(0, 1, data['num_vehicles']))
+    
+    # Plot locations
+    for i in range(num_locations):
+        # Scale the coordinates
+        x = data['locations'][i][1] * scale_factor
+        y = data['locations'][i][2] * scale_factor
+        
+        if i == data['depot']:
+            # Plot depot as a red star with larger size
+            plt.scatter(x, y, c='red', marker='*', s=200, 
+                       label=f"Depot: {data['locations'][i][0]}")
+        else:
+            # Plot other locations as blue circles
+            plt.scatter(x, y, c='blue', marker='o', s=100,
+                       label=data['locations'][i][0] if i == 1 else "")
+            
+            # Optionally add location labels
+            plt.annotate(data['locations'][i][0], (x, y), 
+                        xytext=(5, 5), textcoords='offset points', fontsize=8)
+    
+    # Plot routes for each vehicle with different colors
+    for vehicle_id in range(data['num_vehicles']):
+        index = routing.Start(vehicle_id)
+        points_x = []
+        points_y = []
+        
+        # Start at depot
+        node = manager.IndexToNode(index)
+        points_x.append(data['locations'][node][1] * scale_factor)
+        points_y.append(data['locations'][node][2] * scale_factor)
+        
+        # Add all stops in the route
+        while not routing.IsEnd(index):
+            previous_index = index
+            index = solution.Value(routing.NextVar(index))
+            
+            node = manager.IndexToNode(index)
+            x = data['locations'][node][1] * scale_factor
+            y = data['locations'][node][2] * scale_factor
+            
+            points_x.append(x)
+            points_y.append(y)
+        
+        # Plot the complete route with vehicle-specific color
+        plt.plot(points_x, points_y, '-', color=colors[vehicle_id], linewidth=2, 
+                label=f'Vehicle {vehicle_id+1}')
+    
+    # Set labels and title
+    plt.xlabel("X Coordinate (scaled by 1/1000)")
+    plt.ylabel("Y Coordinate (scaled by 1/1000)")
+    plt.title(f"Cable Routes - {data["num_vehicles"]} rings")
+    
+    # Add grid
+    plt.grid(True, linestyle='--', alpha=0.7)
+    
+    # Make sure axes have equal scale
+    plt.axis('equal')
+    
+    # Use tight layout for better spacing
+    plt.tight_layout()
+    
+    # Show the plot
+    plt.show() 
 
 if __name__ == "__main__":
     main()
