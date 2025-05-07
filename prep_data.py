@@ -23,7 +23,7 @@ def prep_data(df):
         code_map[df["LGD_CODE"][i]] = (df["GP_name"][i], df["LAT"][i], df["LONG"][i])
         for j in range(0, len(df)):
             dist = haversine(df["LAT"][i], df["LONG"][i], df["LAT"][j], df["LONG"][j])
-            df_dist[df["LGD_CODE"][i]].append(round(dist, 2))
+            df_dist[df["LGD_CODE"][i]].append(int(round(dist, 2)*1000))
 
 
     with open("df_dist.json", "w") as fileg:
