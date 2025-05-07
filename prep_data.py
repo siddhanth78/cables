@@ -16,26 +16,19 @@ def haversine(lat1, lon1, lat2, lon2):
     return c * r
 
 def prep_data(df):
-    gps = df[1:]
-    gps_dist = defaultdict(list)
-    block_dist = {}
+    df_dist = defaultdict(list)
     code_map = {}
 
-    for i in range(1, len(df)):
-        block_dist[gps["LGD_CODE"][i]] = (gps["LGD_CODE"][i], round(haversine(gps["LAT"][i], gps["LONG"][i], df["LAT"][0], df["LONG"][0]), 2))
-        code_map[gps["LGD_CODE"][i]] = (gps["GP_name"][i], gps["LAT"][i], gps["LONG"][i])
-        for j in range(1, len(gps)):
-            if i != j:
-                dist = haversine(gps["LAT"][i], gps["LONG"][i], gps["LAT"][j], gps["LONG"][j])
-                if dist <= 8.5:
-                    gps_dist[gps["LGD_CODE"][i]].append((gps["LGD_CODE"][j], round(dist, 2)))
+    for i in range(0, len(df)):
+        code_map[df["LGD_CODE"][i]] = (df["GP_name"][i], df["LAT"][i], df["LONG"][i])
+        for j in range(0, len(df)):
+            dist = haversine(df["LAT"][i], df["LONG"][i], df["LAT"][j], df["LONG"][j])
+            df_dist[df["LGD_CODE"][i]].append(round(dist, 2))
 
-    with open("gps_dist.json", "w") as fileg:
-        fileg.write(json.dumps(gps_dist, indent=4))
+
+    with open("df_dist.json", "w") as fileg:
+        fileg.write(json.dumps(df_dist, indent=4))
         
-    with open("block_dist.json", "w") as fileb:
-        fileb.write(json.dumps(block_dist, indent=4))
-
     with open("code_map.json", "w") as filec:
         filec.write(json.dumps(code_map, indent=4))
 
