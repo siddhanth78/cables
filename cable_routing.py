@@ -2,6 +2,7 @@ from ortools.constraint_solver import routing_enums_pb2
 from ortools.constraint_solver import pywrapcp
 import json
 import numpy as np
+import matplotlib.pyplot as plt
 
 def create_data_model():
     """Stores the data for the problem."""
@@ -80,7 +81,7 @@ def main():
     routing.AddDimension(
         transit_callback_index,
         0,  # no slack
-        100000,  # vehicle maximum travel distance
+        55000,  # vehicle maximum travel distance
         True,  # start cumul to zero
         dimension_name,
     )
@@ -102,8 +103,6 @@ def main():
         plot_vrp_solution(data, manager, routing, solution)
     else:
         print("No solution found !")
-
-import matplotlib.pyplot as plt
 
 def plot_vrp_solution(data, manager, routing, solution):
     """Plots the VRP solution with coordinates scaled by 1/1000."""
